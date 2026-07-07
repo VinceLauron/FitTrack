@@ -362,6 +362,7 @@
 </div>
 
 <script>
+  
   /* ---------------- screen navigation ---------------- */
   function showScreen(id){
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -421,40 +422,24 @@
     });
   }
 
-  async function analyzeMealPhoto(base64, mediaType){
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 300,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-            {
-              type: 'text',
-              text: 'Look at this photo of food. Identify the single most likely dish (short, ALL CAPS, e.g. "GRILLED CHICKEN"). Then estimate reasonable nutrition for the portion shown. Respond with ONLY raw JSON and nothing else, no markdown fences, in exactly this shape: {"name":"FOOD NAME","calories":number,"carbs":number,"fats":number,"protein":number} — calories in kcal, carbs/fats/protein in grams.'
-            }
-          ]
-        }]
-      })
-    });
+  async function analyzeMealPhoto(base64, mediaType) {
+  const response = await fetch("http://localhost:3000/api/scan-meal", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      image: base64,
+      mediaType: mediaType
+    })
+  });
 
-    if (!response.ok) throw new Error('API request failed: ' + response.status);
-
-    const data = await response.json();
-    const textBlock = data.content.find(b => b.type === 'text');
-    if (!textBlock) throw new Error('No text in response');
-
-    const cleaned = textBlock.text.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(cleaned);
-
-    if (!parsed.name || typeof parsed.calories !== 'number') {
-      throw new Error('Unexpected response shape');
-    }
-    return parsed;
+  if (!response.ok) {
+    throw new Error("Failed to analyze meal");
   }
+
+  return await response.json();
+}
 
   function resetMealScreen(){
     currentMeal = null;
