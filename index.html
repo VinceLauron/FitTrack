@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>FitTrackMe</title>
 <style>
   :root{
@@ -14,20 +15,33 @@
 
   *{ box-sizing:border-box; }
 
-  html,body{
-    margin:0; padding:0; height:100%;
+  html{ height:100%; }
+  body{
+    margin:0; padding:0;
+    height:100%;
     background:#e9e9e9;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
   }
 
   .phone{
-    width:328px; height:666px;
+    width:100%;
+    max-width:430px;
+    height:100vh;
+    height:100dvh;
     background:#fff;
-    border-radius:36px;
     overflow:hidden;
     position:relative;
     box-shadow:0 30px 60px rgba(0,0,0,0.25);
+    border-radius:36px;
+  }
+
+  /* on an actual phone screen the app should fill the display edge-to-edge,
+     not look like a little framed mockup */
+  @media (max-width:430px){
+    body{ background:#fff; }
+    .phone{ border-radius:0; box-shadow:none; }
   }
 
   .stack{ position:relative; width:100%; height:100%; }
@@ -61,7 +75,7 @@
     background:radial-gradient(circle at 50% 42%, rgba(255,255,255,.05), transparent 60%);
   }
   .dumbbell-wrap{
-    width:120px; height:120px;
+    width:clamp(90px, 28vw, 120px); height:clamp(90px, 28vw, 120px);
     display:flex; align-items:center; justify-content:center;
     transform-origin:50% 50%;
     opacity:0;
@@ -95,37 +109,42 @@
   /* ================= SHARED HEADER ================= */
   .app-header{
     display:flex; align-items:flex-start; justify-content:space-between;
-    padding:22px 22px 0;
+    padding:calc(18px + env(safe-area-inset-top)) 22px 0;
   }
   .who{ display:flex; align-items:center; gap:8px; }
   .avatar{
     width:30px; height:30px; border-radius:50%; border:1.6px solid #111;
     display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
   }
   .avatar svg{ width:16px; height:16px; stroke:#111; stroke-width:1.8; fill:none; }
   .who span{ font-weight:800; font-size:13.5px; color:#111; letter-spacing:.2px; }
-  .brand{ text-align:center; }
+  .brand{ text-align:center; flex-shrink:0; }
   .brand svg{ width:34px; height:22px; stroke:#111; stroke-width:6; stroke-linecap:round; fill:none; }
   .brand .brand-name{ font-family:Georgia,"Times New Roman",serif; font-style:normal; font-size:11px; color:#111; margin-top:2px; letter-spacing:.3px; }
 
   /* ================= DASHBOARD ================= */
   #dashboard{ background:var(--app-bg); }
   .ring-wrap{
-    position:relative; width:250px; height:250px; margin:34px auto 0;
+    position:relative;
+    width:clamp(200px, 62vw, 250px);
+    height:clamp(200px, 62vw, 250px);
+    margin:clamp(20px, 5vh, 34px) auto 0;
     display:flex; align-items:center; justify-content:center;
   }
   .ring-wrap svg{ width:100%; height:100%; transform:rotate(-90deg); }
   .ring-track{ fill:none; stroke:var(--ring-blue); stroke-linecap:round; }
   .ring-center{ position:absolute; text-align:center; }
-  .ring-center .cals{ font-size:29px; font-weight:800; color:var(--text-blue); transition: color .2s; }
+  .ring-center .cals{ font-size:clamp(23px, 7vw, 29px); font-weight:800; color:var(--text-blue); transition: color .2s; }
   .ring-center .cals .of{ color:#111; font-weight:800; }
-  .ring-center .label{ margin-top:2px; font-size:12px; font-weight:800; letter-spacing:.6px; color:#111; }
+  .ring-center .label{ margin-top:2px; font-size:clamp(10.5px, 3vw, 12px); font-weight:800; letter-spacing:.6px; color:#111; }
 
   .macros{
-    display:flex; justify-content:center; gap:34px;
-    margin:30px 0 0;
+    display:flex; justify-content:center; gap:clamp(18px, 6vw, 34px);
+    margin:clamp(18px, 4vh, 30px) 0 0;
+    padding:0 12px;
   }
-  .macro{ text-align:center; width:76px; }
+  .macro{ text-align:center; width:clamp(64px, 20vw, 76px); }
   .macro .m-label{ font-size:11.5px; font-weight:800; letter-spacing:.4px; color:#111; }
   .macro .m-val{ font-size:11px; color:#4a4a4a; margin:3px 0 6px; }
   .macro .m-bar{ height:5px; border-radius:4px; background:#e3e3e3; overflow:hidden; }
@@ -135,7 +154,7 @@
   .bar-protein i{ width:0%; background:linear-gradient(90deg,#d83a3a,#ff9d9d); }
 
   .cam-btn{
-    position:absolute; left:50%; bottom:26px; transform:translateX(-50%);
+    position:absolute; left:50%; bottom:calc(22px + env(safe-area-inset-bottom)); transform:translateX(-50%);
     width:56px; height:56px; border-radius:50%;
     background:var(--ring-blue);
     display:flex; align-items:center; justify-content:center;
@@ -148,7 +167,7 @@
   .cam-btn:disabled{ opacity:.5; cursor:default; }
 
   .toast{
-    position:absolute; left:50%; bottom:96px; transform:translateX(-50%) translateY(10px);
+    position:absolute; left:50%; bottom:calc(92px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(10px);
     background:#111; color:#fff; font-size:12px; font-weight:700;
     padding:9px 16px; border-radius:20px;
     opacity:0; pointer-events:none;
@@ -382,30 +401,67 @@
 
   renderDashboard();
 
-  /* ---------------- mock food recognition ---------------- */
-  const FOOD_DB = [
-    { name:'GRILLED CHICKEN SALAD', calories:420, carbs:18, fats:14, protein:45 },
-    { name:'AVOCADO TOAST',         calories:350, carbs:38, fats:20, protein:9  },
-    { name:'OATMEAL & BERRIES',     calories:300, carbs:54, fats:6,  protein:10 },
-    { name:'SALMON & RICE BOWL',    calories:520, carbs:45, fats:22, protein:38 },
-    { name:'VEGGIE STIR FRY',       calories:380, carbs:40, fats:12, protein:16 },
-    { name:'PROTEIN SMOOTHIE',      calories:280, carbs:30, fats:5,  protein:25 },
-  ];
-
+  /* ---------------- AI food recognition ---------------- */
   let currentMeal = null;
 
   const photoBox     = document.getElementById('photo-box');
   const mealPhoto     = document.getElementById('meal-photo');
   const scanOverlay   = document.getElementById('scan-overlay');
+  const scanText      = scanOverlay.querySelector('span');
   const cameraInput   = document.getElementById('camera-input');
   const actionBtn     = document.getElementById('meal-action-btn');
   const retakeLink    = document.getElementById('retake-link');
+
+  function fileToBase64(file){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = () => reject(new Error('Could not read image'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function analyzeMealPhoto(base64, mediaType){
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 300,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+            {
+              type: 'text',
+              text: 'Look at this photo of food. Identify the single most likely dish (short, ALL CAPS, e.g. "GRILLED CHICKEN"). Then estimate reasonable nutrition for the portion shown. Respond with ONLY raw JSON and nothing else, no markdown fences, in exactly this shape: {"name":"FOOD NAME","calories":number,"carbs":number,"fats":number,"protein":number} — calories in kcal, carbs/fats/protein in grams.'
+            }
+          ]
+        }]
+      })
+    });
+
+    if (!response.ok) throw new Error('API request failed: ' + response.status);
+
+    const data = await response.json();
+    const textBlock = data.content.find(b => b.type === 'text');
+    if (!textBlock) throw new Error('No text in response');
+
+    const cleaned = textBlock.text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(cleaned);
+
+    if (!parsed.name || typeof parsed.calories !== 'number') {
+      throw new Error('Unexpected response shape');
+    }
+    return parsed;
+  }
 
   function resetMealScreen(){
     currentMeal = null;
     photoBox.classList.remove('has-photo');
     mealPhoto.src = '';
     scanOverlay.classList.remove('show');
+    scanText.textContent = 'Analyzing your meal…';
     retakeLink.classList.remove('show');
     document.getElementById('meal-name').textContent = 'MEAL NAME';
     document.getElementById('meal-cals').textContent = '–';
@@ -451,7 +507,7 @@
     cameraInput.click();
   });
 
-  cameraInput.addEventListener('change', (e) => {
+  cameraInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -460,10 +516,12 @@
     photoBox.classList.add('has-photo');
     scanOverlay.classList.add('show');
     actionBtn.disabled = true;
+    cameraInput.value = '';
 
-    // simulate meal recognition
-    setTimeout(() => {
-      currentMeal = FOOD_DB[Math.floor(Math.random() * FOOD_DB.length)];
+    try {
+      const base64 = await fileToBase64(file);
+      const mediaType = file.type || 'image/jpeg';
+      currentMeal = await analyzeMealPhoto(base64, mediaType);
 
       document.getElementById('meal-name').textContent = currentMeal.name;
       document.getElementById('meal-cals').textContent = fmt(currentMeal.calories);
@@ -481,10 +539,13 @@
       actionBtn.classList.add('confirm-btn');
       actionBtn.setAttribute('aria-label','Add to today');
       actionBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 9 17 20 6"/></svg>';
-    }, 1400);
-
-    // allow choosing the same photo again later
-    cameraInput.value = '';
+    } catch (err) {
+      console.error('Meal recognition failed:', err);
+      scanOverlay.classList.remove('show');
+      document.getElementById('meal-name').textContent = "COULDN'T RECOGNIZE MEAL";
+      retakeLink.classList.add('show');
+      actionBtn.disabled = false;
+    }
   });
 </script>
 </body>
