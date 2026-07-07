@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FitTrackMe</title>
+<style>
+  :root{
+    --dark:#1e1e1e;
+    --app-bg:#f5f5f5;
+    --ring-blue:#9cd5ff;
+    --text-blue:#0d18d8;
+    --grey-body:#6f6f6f;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:#e9e9e9;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .phone{
+    width:328px; height:666px;
+    background:#fff;
+    border-radius:36px;
+    overflow:hidden;
+    position:relative;
+    box-shadow:0 30px 60px rgba(0,0,0,0.25);
+  }
+
+  .stack{ position:relative; width:100%; height:100%; }
+
+  .screen{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    background:#fff;
+    display:flex; flex-direction:column;
+    opacity:0;
+    visibility:hidden;
+    transform: translateY(8px);
+    transition: opacity .45s ease, transform .45s ease, visibility 0s linear .45s;
+  }
+  .screen.active{
+    opacity:1; visibility:visible; transform:translateY(0);
+    transition: opacity .45s ease, transform .45s ease, visibility 0s;
+    z-index:2;
+  }
+
+  /* ================= SPLASH ================= */
+  #splash .hero{
+    height:56%; flex-shrink:0;
+    background:var(--dark);
+    border-radius:0 0 40px 40px;
+    display:flex; align-items:center; justify-content:center;
+    position:relative;
+  }
+  #splash .hero::after{
+    content:""; position:absolute; inset:0; border-radius:inherit;
+    background:radial-gradient(circle at 50% 42%, rgba(255,255,255,.05), transparent 60%);
+  }
+  .dumbbell-wrap{
+    width:120px; height:120px;
+    display:flex; align-items:center; justify-content:center;
+    transform-origin:50% 50%;
+    opacity:0;
+  }
+  #splash.active .dumbbell-wrap{
+    animation: spin 1.1s cubic-bezier(.45,.05,.55,.95) .15s 1 forwards;
+  }
+  @keyframes spin{
+    0%{ transform:rotate(0deg) scale(.6); opacity:0; }
+    20%{ opacity:1; }
+    100%{ transform:rotate(360deg) scale(1); opacity:1; }
+  }
+  .dumbbell-wrap svg{
+    width:100%; height:100%;
+    stroke:#f2f2f2; stroke-width:3.2; stroke-linecap:round; stroke-linejoin:round; fill:none;
+  }
+  #splash .content{
+    flex:1; display:flex; flex-direction:column; align-items:center;
+    padding:26px 30px 0; text-align:center;
+  }
+  @keyframes reveal{
+    from{ opacity:0; transform:translateY(14px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  .reveal{ opacity:0; }
+  #splash.active .reveal{ animation: reveal .7s ease-out forwards; }
+  #splash .title{ margin:0; font-size:26px; font-weight:800; letter-spacing:1px; color:#111; animation-delay:1.3s; }
+  #splash .subtitle{ margin:2px 0 14px; font-size:22px; font-weight:500; letter-spacing:2px; color:#b3b3b3; animation-delay:1.55s; }
+  #splash .desc{ margin:0; font-size:13px; line-height:1.6; color:#9a9a9a; max-width:240px; animation-delay:1.8s; }
+
+  /* ================= SHARED HEADER ================= */
+  .app-header{
+    display:flex; align-items:flex-start; justify-content:space-between;
+    padding:22px 22px 0;
+  }
+  .who{ display:flex; align-items:center; gap:8px; }
+  .avatar{
+    width:30px; height:30px; border-radius:50%; border:1.6px solid #111;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .avatar svg{ width:16px; height:16px; stroke:#111; stroke-width:1.8; fill:none; }
+  .who span{ font-weight:800; font-size:13.5px; color:#111; letter-spacing:.2px; }
+  .brand{ text-align:center; }
+  .brand svg{ width:34px; height:22px; stroke:#111; stroke-width:6; stroke-linecap:round; fill:none; }
+  .brand .brand-name{ font-family:Georgia,"Times New Roman",serif; font-style:normal; font-size:11px; color:#111; margin-top:2px; letter-spacing:.3px; }
+
+  /* ================= DASHBOARD ================= */
+  #dashboard{ background:var(--app-bg); }
+  .ring-wrap{
+    position:relative; width:250px; height:250px; margin:34px auto 0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .ring-wrap svg{ width:100%; height:100%; transform:rotate(-90deg); }
+  .ring-track{ fill:none; stroke:var(--ring-blue); stroke-linecap:round; }
+  .ring-center{ position:absolute; text-align:center; }
+  .ring-center .cals{ font-size:29px; font-weight:800; color:var(--text-blue); transition: color .2s; }
+  .ring-center .cals .of{ color:#111; font-weight:800; }
+  .ring-center .label{ margin-top:2px; font-size:12px; font-weight:800; letter-spacing:.6px; color:#111; }
+
+  .macros{
+    display:flex; justify-content:center; gap:34px;
+    margin:30px 0 0;
+  }
+  .macro{ text-align:center; width:76px; }
+  .macro .m-label{ font-size:11.5px; font-weight:800; letter-spacing:.4px; color:#111; }
+  .macro .m-val{ font-size:11px; color:#4a4a4a; margin:3px 0 6px; }
+  .macro .m-bar{ height:5px; border-radius:4px; background:#e3e3e3; overflow:hidden; }
+  .macro .m-bar i{ display:block; height:100%; border-radius:4px; transition: width .6s ease; }
+  .bar-carbs i{ width:0%; background:linear-gradient(90deg,#0d18d8,#7fa0ff); }
+  .bar-fats i{ width:0%; background:linear-gradient(90deg,#ff5b2e,#ffb199); }
+  .bar-protein i{ width:0%; background:linear-gradient(90deg,#d83a3a,#ff9d9d); }
+
+  .cam-btn{
+    position:absolute; left:50%; bottom:26px; transform:translateX(-50%);
+    width:56px; height:56px; border-radius:50%;
+    background:var(--ring-blue);
+    display:flex; align-items:center; justify-content:center;
+    border:none; cursor:pointer;
+    box-shadow:0 10px 20px rgba(120,180,255,.5);
+    transition: background .2s;
+  }
+  .cam-btn svg{ width:24px; height:24px; }
+  .cam-btn.confirm-btn{ background:#3ddc84; box-shadow:0 10px 20px rgba(61,220,132,.45); }
+  .cam-btn:disabled{ opacity:.5; cursor:default; }
+
+  .toast{
+    position:absolute; left:50%; bottom:96px; transform:translateX(-50%) translateY(10px);
+    background:#111; color:#fff; font-size:12px; font-weight:700;
+    padding:9px 16px; border-radius:20px;
+    opacity:0; pointer-events:none;
+    transition: opacity .3s ease, transform .3s ease;
+    white-space:nowrap;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* ================= MEAL CAPTURE ================= */
+  #meal{ background:var(--app-bg); }
+  .photo-box{
+    width:calc(100% - 44px); aspect-ratio:1/1; margin:26px auto 0;
+    background:#fbfbfb; border-radius:6px;
+    box-shadow:0 18px 30px rgba(0,0,0,.08);
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+    position:relative;
+  }
+  .photo-box img{ width:100%; height:100%; object-fit:cover; display:none; }
+  .photo-hint{
+    font-size:12.5px; color:#b7b7b7; font-weight:600; text-align:center; padding:0 20px;
+  }
+  .photo-box.has-photo .photo-hint{ display:none; }
+  .photo-box.has-photo img{ display:block; }
+
+  .scan-overlay{
+    position:absolute; inset:0;
+    display:none;
+    align-items:center; justify-content:center;
+    flex-direction:column; gap:10px;
+    background:rgba(255,255,255,.55);
+    backdrop-filter: blur(1px);
+  }
+  .scan-overlay.show{ display:flex; }
+  .scan-spinner{
+    width:26px; height:26px; border-radius:50%;
+    border:3px solid #cfe6ff; border-top-color:#0d18d8;
+    animation: spin-load .8s linear infinite;
+  }
+  @keyframes spin-load{ to{ transform:rotate(360deg); } }
+  .scan-overlay span{ font-size:12px; font-weight:700; color:#111; }
+
+  .meal-name{ text-align:center; font-weight:800; font-size:13.5px; letter-spacing:.6px; margin-top:22px; color:#111; }
+  .cal-row{ display:flex; justify-content:center; gap:8px; margin-top:16px; font-size:13px; }
+  .cal-row .cal-label{ font-weight:500; color:#111; }
+  .cal-row .cal-val{ font-weight:700; color:#111; }
+  #meal .macros{ margin-top:26px; }
+
+  .retake-link{
+    text-align:center; margin-top:14px;
+    font-size:11.5px; font-weight:700; color:#0d18d8;
+    text-decoration:underline; cursor:pointer;
+    display:none;
+  }
+  .retake-link.show{ display:block; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="stack">
+
+    <!-- ============ SPLASH ============ -->
+    <div class="screen active" id="splash">
+      <div class="hero">
+        <div class="dumbbell-wrap">
+          <svg viewBox="0 0 100 100">
+            <line x1="30" y1="50" x2="70" y2="50"/>
+            <rect x="12" y="34" width="14" height="32" rx="4"/>
+            <rect x="74" y="34" width="14" height="32" rx="4"/>
+            <line x1="19" y1="42" x2="19" y2="58"/>
+            <line x1="81" y1="42" x2="81" y2="58"/>
+          </svg>
+        </div>
+      </div>
+      <div class="content">
+        <h1 class="title reveal">FITNESS</h1>
+        <div class="subtitle reveal">CLUB</div>
+        <p class="desc reveal">
+          Train smarter every day. Track your workouts, follow guided
+          routines, and build the habit that keeps you moving.
+        </p>
+      </div>
+    </div>
+
+    <!-- ============ DASHBOARD ============ -->
+    <div class="screen" id="dashboard">
+      <div class="app-header">
+        <div class="who">
+          <div class="avatar">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c1.2-4 4-5.6 7-5.6s5.8 1.6 7 5.6"/></svg>
+          </div>
+          <span>HELLO VINCE!</span>
+        </div>
+        <div class="brand">
+          <svg viewBox="0 0 100 40"><line x1="30" y1="20" x2="70" y2="20"/><rect x="12" y="8" width="14" height="24" rx="4"/><rect x="74" y="8" width="14" height="24" rx="4"/><line x1="19" y1="13" x2="19" y2="27"/><line x1="81" y1="13" x2="81" y2="27"/></svg>
+          <div class="brand-name"><i>FitTrackMe</i></div>
+        </div>
+      </div>
+
+      <div class="ring-wrap">
+        <svg viewBox="0 0 220 220">
+          <circle class="ring-track" cx="110" cy="110" r="92" stroke-width="18"
+                  stroke-dasharray="530 48" stroke-dashoffset="-24"/>
+        </svg>
+        <div class="ring-center">
+          <div class="cals" id="cal-text">0<span class="of">/1,600</span></div>
+          <div class="label">CALORIES REMAINING</div>
+        </div>
+      </div>
+
+      <div class="macros">
+        <div class="macro">
+          <div class="m-label">CARBS</div>
+          <div class="m-val" id="carbs-val">0/117g</div>
+          <div class="m-bar bar-carbs"><i id="carbs-bar" style="width:0%"></i></div>
+        </div>
+        <div class="macro">
+          <div class="m-label">FATS</div>
+          <div class="m-val" id="fats-val">0/52g</div>
+          <div class="m-bar bar-fats"><i id="fats-bar" style="width:0%"></i></div>
+        </div>
+        <div class="macro">
+          <div class="m-label">PROTEIN</div>
+          <div class="m-val" id="protein-val">0/100g</div>
+          <div class="m-bar bar-protein"><i id="protein-bar" style="width:0%"></i></div>
+        </div>
+      </div>
+
+      <div class="toast" id="toast">Meal logged!</div>
+
+      <button class="cam-btn" id="open-meal" aria-label="Add meal">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1-2h7l1 2h2A1.5 1.5 0 0 1 20 8.5v9A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5v-9Z" fill="#111"/><circle cx="12" cy="13" r="3.4" fill="#9cd5ff"/></svg>
+      </button>
+    </div>
+
+    <!-- ============ MEAL CAPTURE ============ -->
+    <div class="screen" id="meal">
+      <div class="app-header">
+        <div class="who">
+          <div class="avatar">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c1.2-4 4-5.6 7-5.6s5.8 1.6 7 5.6"/></svg>
+          </div>
+          <span>HELLO VINCE!</span>
+        </div>
+        <div class="brand">
+          <svg viewBox="0 0 100 40"><line x1="30" y1="20" x2="70" y2="20"/><rect x="12" y="8" width="14" height="24" rx="4"/><rect x="74" y="8" width="14" height="24" rx="4"/><line x1="19" y1="13" x2="19" y2="27"/><line x1="81" y1="13" x2="81" y2="27"/></svg>
+          <div class="brand-name"><i>FitTrackMe</i></div>
+        </div>
+      </div>
+
+      <div class="photo-box" id="photo-box">
+        <img id="meal-photo" alt="Captured meal">
+        <div class="photo-hint">Tap the camera button below<br>to take a photo of your meal</div>
+        <div class="scan-overlay" id="scan-overlay">
+          <div class="scan-spinner"></div>
+          <span>Analyzing your meal…</span>
+        </div>
+      </div>
+
+      <div class="meal-name" id="meal-name">MEAL NAME</div>
+      <div class="cal-row"><span class="cal-label">CALORIES :</span><span class="cal-val" id="meal-cals">–</span></div>
+
+      <div class="macros">
+        <div class="macro">
+          <div class="m-label">CARBS</div>
+          <div class="m-val" id="meal-carbs">–</div>
+          <div class="m-bar bar-carbs"><i id="meal-carbs-bar" style="width:0%"></i></div>
+        </div>
+        <div class="macro">
+          <div class="m-label">FATS</div>
+          <div class="m-val" id="meal-fats">–</div>
+          <div class="m-bar bar-fats"><i id="meal-fats-bar" style="width:0%"></i></div>
+        </div>
+        <div class="macro">
+          <div class="m-label">PROTEIN</div>
+          <div class="m-val" id="meal-protein">–</div>
+          <div class="m-bar bar-protein"><i id="meal-protein-bar" style="width:0%"></i></div>
+        </div>
+      </div>
+
+      <div class="retake-link" id="retake-link">Retake photo</div>
+
+      <button class="cam-btn" id="meal-action-btn" aria-label="Open camera">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1-2h7l1 2h2A1.5 1.5 0 0 1 20 8.5v9A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5v-9Z" fill="#111"/><circle cx="12" cy="13" r="3.4" fill="#9cd5ff"/></svg>
+      </button>
+
+      <input type="file" accept="image/*" capture="environment" id="camera-input" style="display:none">
+    </div>
+
+  </div>
+</div>
+
+<script>
+  /* ---------------- screen navigation ---------------- */
+  function showScreen(id){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  const AUTO_ADVANCE_MS = 3400;
+  setTimeout(() => showScreen('dashboard'), AUTO_ADVANCE_MS);
+
+  /* ---------------- daily totals ---------------- */
+  const goals = { calories: 1600, carbs: 117, fats: 52, protein: 100 };
+  const consumed = { calories: 0, carbs: 0, fats: 0, protein: 0 };
+
+  function fmt(n){ return Math.round(n).toLocaleString(); }
+
+  function renderDashboard(){
+    const eaten = Math.min(consumed.calories, goals.calories);
+    document.getElementById('cal-text').innerHTML =
+      fmt(eaten) + '<span class="of">/' + fmt(goals.calories) + '</span>';
+
+    setMacro('carbs', consumed.carbs, goals.carbs);
+    setMacro('fats', consumed.fats, goals.fats);
+    setMacro('protein', consumed.protein, goals.protein);
+  }
+
+  function setMacro(key, val, goal){
+    document.getElementById(key + '-val').textContent = fmt(val) + '/' + fmt(goal) + 'g';
+    document.getElementById(key + '-bar').style.width = Math.min((val / goal) * 100, 100) + '%';
+  }
+
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  renderDashboard();
+
+  /* ---------------- mock food recognition ---------------- */
+  const FOOD_DB = [
+    { name:'GRILLED CHICKEN SALAD', calories:420, carbs:18, fats:14, protein:45 },
+    { name:'AVOCADO TOAST',         calories:350, carbs:38, fats:20, protein:9  },
+    { name:'OATMEAL & BERRIES',     calories:300, carbs:54, fats:6,  protein:10 },
+    { name:'SALMON & RICE BOWL',    calories:520, carbs:45, fats:22, protein:38 },
+    { name:'VEGGIE STIR FRY',       calories:380, carbs:40, fats:12, protein:16 },
+    { name:'PROTEIN SMOOTHIE',      calories:280, carbs:30, fats:5,  protein:25 },
+  ];
+
+  let currentMeal = null;
+
+  const photoBox     = document.getElementById('photo-box');
+  const mealPhoto     = document.getElementById('meal-photo');
+  const scanOverlay   = document.getElementById('scan-overlay');
+  const cameraInput   = document.getElementById('camera-input');
+  const actionBtn     = document.getElementById('meal-action-btn');
+  const retakeLink    = document.getElementById('retake-link');
+
+  function resetMealScreen(){
+    currentMeal = null;
+    photoBox.classList.remove('has-photo');
+    mealPhoto.src = '';
+    scanOverlay.classList.remove('show');
+    retakeLink.classList.remove('show');
+    document.getElementById('meal-name').textContent = 'MEAL NAME';
+    document.getElementById('meal-cals').textContent = '–';
+    document.getElementById('meal-carbs').textContent = '–';
+    document.getElementById('meal-fats').textContent = '–';
+    document.getElementById('meal-protein').textContent = '–';
+    ['meal-carbs-bar','meal-fats-bar','meal-protein-bar'].forEach(id => {
+      document.getElementById(id).style.width = '0%';
+    });
+    actionBtn.classList.remove('confirm-btn');
+    actionBtn.disabled = false;
+    actionBtn.setAttribute('aria-label','Open camera');
+    actionBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1-2h7l1 2h2A1.5 1.5 0 0 1 20 8.5v9A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5v-9Z" fill="#111"/><circle cx="12" cy="13" r="3.4" fill="#9cd5ff"/></svg>';
+  }
+
+  function openDashboard(){
+    showScreen('dashboard');
+  }
+
+  document.getElementById('open-meal').addEventListener('click', () => {
+    resetMealScreen();
+    showScreen('meal');
+  });
+
+  /* main action button: camera (empty) -> confirm (after result) */
+  actionBtn.addEventListener('click', () => {
+    if (currentMeal){
+      // confirm & log
+      consumed.calories += currentMeal.calories;
+      consumed.carbs    += currentMeal.carbs;
+      consumed.fats     += currentMeal.fats;
+      consumed.protein  += currentMeal.protein;
+      renderDashboard();
+      openDashboard();
+      showToast(currentMeal.name.charAt(0) + currentMeal.name.slice(1).toLowerCase() + ' logged!');
+    } else {
+      cameraInput.click();
+    }
+  });
+
+  retakeLink.addEventListener('click', () => {
+    resetMealScreen();
+    cameraInput.click();
+  });
+
+  cameraInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const url = URL.createObjectURL(file);
+    mealPhoto.src = url;
+    photoBox.classList.add('has-photo');
+    scanOverlay.classList.add('show');
+    actionBtn.disabled = true;
+
+    // simulate meal recognition
+    setTimeout(() => {
+      currentMeal = FOOD_DB[Math.floor(Math.random() * FOOD_DB.length)];
+
+      document.getElementById('meal-name').textContent = currentMeal.name;
+      document.getElementById('meal-cals').textContent = fmt(currentMeal.calories);
+      document.getElementById('meal-carbs').textContent = currentMeal.carbs + 'g';
+      document.getElementById('meal-fats').textContent = currentMeal.fats + 'g';
+      document.getElementById('meal-protein').textContent = currentMeal.protein + 'g';
+
+      document.getElementById('meal-carbs-bar').style.width = Math.min((currentMeal.carbs / goals.carbs) * 100, 100) + '%';
+      document.getElementById('meal-fats-bar').style.width = Math.min((currentMeal.fats / goals.fats) * 100, 100) + '%';
+      document.getElementById('meal-protein-bar').style.width = Math.min((currentMeal.protein / goals.protein) * 100, 100) + '%';
+
+      scanOverlay.classList.remove('show');
+      retakeLink.classList.add('show');
+      actionBtn.disabled = false;
+      actionBtn.classList.add('confirm-btn');
+      actionBtn.setAttribute('aria-label','Add to today');
+      actionBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 9 17 20 6"/></svg>';
+    }, 1400);
+
+    // allow choosing the same photo again later
+    cameraInput.value = '';
+  });
+</script>
+</body>
+</html>
